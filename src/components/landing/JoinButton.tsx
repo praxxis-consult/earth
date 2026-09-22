@@ -1,27 +1,31 @@
 /**
  * Figma "Frame 1000011497" (213:1040 nav, 213:1078 form).
  * Top visible fill #007C53, radius 30, padding 16/24, gap 8, 14px Medium, letter-spacing -0.28,
- * label fill is a vertical gradient white → white 86%. Arrow is the exported vuesax arrow-right node.
+ * label fill is a vertical gradient white → white 86% (raised to 92% so the label passes AA on the green). Arrow is the exported vuesax arrow-right node.
  */
 export function JoinButton({
   href,
   type,
   className = "",
+  disabled = false,
+  compact = false,
 }: {
   href?: string;
   type?: "submit";
   className?: string;
+  disabled?: boolean;
+  /** Nav use: drops the label below 360px so the wordmark is never covered. */
+  compact?: boolean;
 }) {
-  const classes = `inline-flex h-12 items-center justify-center gap-2 rounded-[30px] bg-[#007C53] px-6 py-4 transition-colors hover:bg-[#006946] ${className}`;
+  const classes = `inline-flex h-12 items-center justify-center gap-2 rounded-[30px] bg-earth-green px-6 py-4 transition-colors hover:bg-[#006946] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-earth-green disabled:cursor-wait disabled:opacity-70 ${
+    compact ? "px-4 min-[360px]:px-6" : ""
+  } ${className}`;
   const inner = (
     <>
       <span
-        className="text-[14px] font-medium leading-[17.64px] tracking-[-0.28px] text-transparent"
-        style={{
-          backgroundImage: "linear-gradient(180deg, #FFFFFF 0%, rgba(255,255,255,0.86) 90%)",
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-        }}
+        className={`bg-[linear-gradient(180deg,#FFFFFF_0%,rgba(255,255,255,0.92)_90%)] bg-clip-text text-[14px] font-medium leading-[1.26] tracking-[-0.28px] text-transparent ${
+          compact ? "hidden min-[360px]:inline" : ""
+        }`}
       >
         Join Waitlist
       </span>
@@ -30,13 +34,18 @@ export function JoinButton({
   );
   if (type === "submit") {
     return (
-      <button type="submit" className={classes}>
+      <button
+        type="submit"
+        className={classes}
+        disabled={disabled}
+        aria-busy={disabled || undefined}
+      >
         {inner}
       </button>
     );
   }
   return (
-    <a href={href} className={classes}>
+    <a href={href} className={classes} aria-label={compact ? "Join waitlist" : undefined}>
       {inner}
     </a>
   );

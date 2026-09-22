@@ -34,3 +34,4 @@ dist-ssr
 
 # Figma reference renders and raw node dumps
 figma-refs/
+.env*.local

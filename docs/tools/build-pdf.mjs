@@ -2,25 +2,40 @@
 import { marked } from "marked";
 import { readFileSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
-const [,, IN, OUT_HTML, OUT_PDF] = process.argv;
+const [, , IN, OUT_HTML, OUT_PDF] = process.argv;
 const md = readFileSync(IN, "utf8");
-const slug = s => s.toLowerCase().replace(/<[^>]+>/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+const slug = (s) =>
+  s
+    .toLowerCase()
+    .replace(/<[^>]+>/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 const toc = [];
 const renderer = new marked.Renderer();
 renderer.heading = function ({ tokens, depth }) {
-  const text = this.parser.parseInline(tokens); const id = slug(text);
+  const text = this.parser.parseInline(tokens);
+  const id = slug(text);
   if (depth === 2) toc.push({ id, text });
   return `<h${depth} id="${id}">${text}</h${depth}>\n`;
 };
 renderer.table = function (token) {
-  const head = "<tr>" + token.header.map(c => `<th>${this.parser.parseInline(c.tokens)}</th>`).join("") + "</tr>";
-  const body = token.rows.map(r => "<tr>" + r.map(c => `<td>${this.parser.parseInline(c.tokens)}</td>`).join("") + "</tr>").join("\n");
-  const empty = token.header.every(c => !c.text.trim());
-  const cls = "tw" + (token.header.length >= 7 ? " wide" : "") + (token.rows.length <= 8 ? " keep" : "");
+  const head =
+    "<tr>" +
+    token.header.map((c) => `<th>${this.parser.parseInline(c.tokens)}</th>`).join("") +
+    "</tr>";
+  const body = token.rows
+    .map(
+      (r) =>
+        "<tr>" + r.map((c) => `<td>${this.parser.parseInline(c.tokens)}</td>`).join("") + "</tr>",
+    )
+    .join("\n");
+  const empty = token.header.every((c) => !c.text.trim());
+  const cls =
+    "tw" + (token.header.length >= 7 ? " wide" : "") + (token.rows.length <= 8 ? " keep" : "");
   return `<div class="${cls}"><table>${empty ? "" : `<thead>${head}</thead>`}<tbody>${body}</tbody></table></div>\n`;
 };
 const body = marked.parse(md, { renderer, gfm: true });
-const tocHtml = `<nav class="toc"><p class="label">Contents</p><ol>${toc.map(t=>`<li><a href="#${t.id}">${t.text.replace(/^\d+\.\s*/,"")}</a></li>`).join("")}</ol></nav>`;
+const tocHtml = `<nav class="toc"><p class="label">Contents</p><ol>${toc.map((t) => `<li><a href="#${t.id}">${t.text.replace(/^\d+\.\s*/, "")}</a></li>`).join("")}</ol></nav>`;
 const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Earth — Product Requirements</title><meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,16 +79,60 @@ const withToc = toc.length >= 4 ? html.replace(/(<\/table><\/div>)/, `$1\n${tocH
 writeFileSync(OUT_HTML, withToc);
 console.log("html", withToc.length, "bytes;", toc.length, "sections");
 if (!OUT_PDF) process.exit(0);
-const CH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"; const port = 9340;
-const chrome = spawn(CH, ["--headless=new","--disable-gpu","--no-first-run",`--remote-debugging-port=${port}`,`--user-data-dir=${process.cwd()}/ud`,"about:blank"],{stdio:"ignore"});
-const sleep = ms => new Promise(r=>setTimeout(r,ms));
-let target; for (let i=0;i<40;i++){ try { const l = await (await fetch(`http://127.0.0.1:${port}/json`)).json(); target = l.find(t=>t.type==="page"); if (target) break; } catch{} await sleep(250); }
-const ws = new WebSocket(target.webSocketDebuggerUrl); await new Promise(r=>ws.onopen=r);
-let id=0; const pend={}; ws.onmessage=e=>{const m=JSON.parse(e.data); if(m.id&&pend[m.id]){pend[m.id](m);delete pend[m.id];}};
-const send=(method,params={})=>new Promise(res=>{const i=++id;pend[i]=res;ws.send(JSON.stringify({id:i,method,params}));});
-await send("Page.enable"); await send("Page.navigate",{url:"file://"+OUT_HTML}); await sleep(3500);
-const r = await send("Page.printToPDF",{printBackground:true,preferCSSPageSize:true,displayHeaderFooter:true,
-  headerTemplate:"<span></span>",
-  footerTemplate:'<div style="font:7pt sans-serif;color:#888;width:100%;padding:0 14mm;display:flex;justify-content:space-between"><span>Earth · Product Requirements · v3.0 · Confidential</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>'});
-writeFileSync(OUT_PDF, Buffer.from(r.result.data,"base64")); console.log("pdf written");
-ws.close(); chrome.kill(); process.exit(0);
+const CH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const port = 9340;
+const chrome = spawn(
+  CH,
+  [
+    "--headless=new",
+    "--disable-gpu",
+    "--no-first-run",
+    `--remote-debugging-port=${port}`,
+    `--user-data-dir=${process.cwd()}/ud`,
+    "about:blank",
+  ],
+  { stdio: "ignore" },
+);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let target;
+for (let i = 0; i < 40; i++) {
+  try {
+    const l = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+    target = l.find((t) => t.type === "page");
+    if (target) break;
+  } catch {}
+  await sleep(250);
+}
+const ws = new WebSocket(target.webSocketDebuggerUrl);
+await new Promise((r) => (ws.onopen = r));
+let id = 0;
+const pend = {};
+ws.onmessage = (e) => {
+  const m = JSON.parse(e.data);
+  if (m.id && pend[m.id]) {
+    pend[m.id](m);
+    delete pend[m.id];
+  }
+};
+const send = (method, params = {}) =>
+  new Promise((res) => {
+    const i = ++id;
+    pend[i] = res;
+    ws.send(JSON.stringify({ id: i, method, params }));
+  });
+await send("Page.enable");
+await send("Page.navigate", { url: "file://" + OUT_HTML });
+await sleep(3500);
+const r = await send("Page.printToPDF", {
+  printBackground: true,
+  preferCSSPageSize: true,
+  displayHeaderFooter: true,
+  headerTemplate: "<span></span>",
+  footerTemplate:
+    '<div style="font:7pt sans-serif;color:#888;width:100%;padding:0 14mm;display:flex;justify-content:space-between"><span>Earth · Product Requirements · v3.0 · Confidential</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
+});
+writeFileSync(OUT_PDF, Buffer.from(r.result.data, "base64"));
+console.log("pdf written");
+ws.close();
+chrome.kill();
+process.exit(0);

@@ -73,21 +73,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Earth — Be the first to trade when Earth opens" },
-      {
-        name: "description",
-        content:
-          "Earth connects farms, food stores, and verified natural resource producers directly to buyers. No speculative middlemen, zero escrow holds.",
-      },
       { name: "author", content: "Earth" },
-      { property: "og:title", content: "Earth — Be the first to trade when Earth opens" },
-      {
-        property: "og:description",
-        content:
-          "Earth connects farms, food stores, and verified natural resource producers directly to buyers.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

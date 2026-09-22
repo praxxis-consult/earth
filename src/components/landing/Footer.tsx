@@ -20,10 +20,7 @@ const SOCIAL = [
  */
 export function Footer() {
   return (
-    <footer
-      className="w-full"
-      style={{ background: "linear-gradient(0deg, #0C2310 1%, #2F893F 153%)" }}
-    >
+    <footer className="w-full bg-[linear-gradient(0deg,#0C2310_1%,#2F893F_153%)]">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col px-5 pb-10 pt-12 md:px-10 md:pb-16 md:pt-16 xl:px-[120px]">
         <div className="flex w-full flex-col gap-10">
           <div className="flex flex-col gap-6">
@@ -34,14 +31,22 @@ export function Footer() {
               concessions directly to global industrial markets.
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex h-[26px] items-center gap-4">
             {SOCIAL.map((s) => (
-              <a key={s.name} href={s.href} aria-label={s.name} target="_blank" rel="noreferrer">
+              <a
+                key={s.name}
+                href={s.href}
+                aria-label={s.name}
+                target="_blank"
+                rel="noreferrer"
+                className="-mx-2 -my-[9px] inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-white"
+              >
                 <img
                   src={s.icon}
                   alt=""
                   width={s.size}
                   height={s.size}
+                  loading="lazy"
                   style={{ width: s.size, height: s.size }}
                 />
               </a>
