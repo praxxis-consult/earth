@@ -1,18 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Nav } from "@/components/earth/Nav";
-import { Hero } from "@/components/earth/Hero";
-import { Categories } from "@/components/earth/Categories";
-import { Story } from "@/components/earth/Story";
-import { Catalogue } from "@/components/earth/Catalogue";
-import { GlobalReach } from "@/components/earth/GlobalReach";
-import { WhyEarth } from "@/components/earth/WhyEarth";
-import { Vision } from "@/components/earth/Vision";
-import { Closing } from "@/components/earth/Closing";
+import { NavBar } from "@/components/landing/NavBar";
+import { Hero } from "@/components/landing/Hero";
+import { Faq } from "@/components/landing/Faq";
+import { Footer } from "@/components/landing/Footer";
 
-const title =
-  "Earth — From Earth to market | A global exchange for resources, commodities & produce";
+const title = "Earth — Be the first to trade when Earth opens";
 const description =
-  "Earth is a global exchange for everything that grows from the earth, is locked beneath it, or feeds from it: produce, energy, minerals, metals, timber and raw materials, open to producers and buyers anywhere.";
+  "Earth connects farms, food stores, and verified natural resource producers directly to buyers. No speculative middlemen, zero escrow holds, with direct split payment and doorstep courier delivery.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,6 +16,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/figma/hero.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
@@ -30,16 +25,11 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <main className="bg-paper text-ink">
-      <Nav />
+    <main className="mx-auto w-[1440px] max-w-full overflow-x-hidden bg-white text-[#141414]">
+      <NavBar />
       <Hero />
-      <Categories />
-      <Story />
-      <Catalogue />
-      <GlobalReach />
-      <WhyEarth />
-      <Vision />
-      <Closing />
+      <Faq />
+      <Footer />
     </main>
   );
 }

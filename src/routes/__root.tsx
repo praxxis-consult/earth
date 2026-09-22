@@ -73,17 +73,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Earth — From Earth to market" },
+      { title: "Earth — Be the first to trade when Earth opens" },
       {
         name: "description",
         content:
-          "Earth is a global exchange for produce, energy, minerals, metals, forestry and raw materials, open to producers and buyers anywhere.",
+          "Earth connects farms, food stores, and verified natural resource producers directly to buyers. No speculative middlemen, zero escrow holds.",
       },
       { name: "author", content: "Earth" },
-      { property: "og:title", content: "Earth — From Earth to market" },
+      { property: "og:title", content: "Earth — Be the first to trade when Earth opens" },
       {
         property: "og:description",
-        content: "A global exchange for resources, commodities and produce.",
+        content:
+          "Earth connects farms, food stores, and verified natural resource producers directly to buyers.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -93,7 +94,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400&display=swap",
       },
       {
         rel: "stylesheet",
