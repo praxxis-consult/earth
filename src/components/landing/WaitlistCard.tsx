@@ -180,10 +180,7 @@ export function WaitlistCard() {
       </div>
 
       {/* Honeypot: hidden from people and assistive tech; bots that fill it are dropped server-side. */}
-      <div
-        className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden"
-        aria-hidden="true"
-      >
+      <div className="sr-only" aria-hidden="true">
         <label htmlFor={HONEYPOT_FIELD}>Website</label>
         <input
           id={HONEYPOT_FIELD}
