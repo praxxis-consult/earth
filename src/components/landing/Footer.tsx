@@ -1,21 +1,34 @@
 import { Logo } from "./Logo";
 
 const SOCIAL = [
-  { name: "X", href: "https://x.com", icon: "/figma/social-x.svg", size: 20 },
-  { name: "Facebook", href: "https://facebook.com", icon: "/figma/social-facebook.svg", size: 24 },
+  { name: "X", href: "https://x.com", icon: "/figma/social-x.svg", size: 20, hit: "-mx-3 -my-3" },
+  {
+    name: "Facebook",
+    href: "https://facebook.com",
+    icon: "/figma/social-facebook.svg",
+    size: 24,
+    hit: "-mx-[10px] -my-[10px]",
+  },
   {
     name: "Instagram",
     href: "https://instagram.com",
     icon: "/figma/social-instagram.svg",
     size: 24,
   },
-  { name: "LinkedIn", href: "https://linkedin.com", icon: "/figma/social-linkedin.svg", size: 26 },
+  {
+    name: "LinkedIn",
+    href: "https://linkedin.com",
+    icon: "/figma/social-linkedin.svg",
+    size: 26,
+    hit: "-mx-[9px] -my-[9px]",
+  },
 ];
 
 /**
  * Figma "nav" footer (213:1146): 1440×446. Gradient 0deg #0C2310 → #2F893F with handles at 99% and −53%,
  * so in CSS the stops sit at 1% and 153%. Content frame at (120,64) 1200 wide, gap 40.
  * Bottom bar at y 314: padding 24/0, 1px top border #9C9C9C 50%, space-between.
+ * Social links get 44px hit areas; each icon's negative margin is (44 − size) / 2 so the icons stay at Figma's x.
  * Built as flow: 64 + 170 + 80 + 68 + 64 = 446 at desktop. Narrow widths stack the bottom bar; ours, no mobile frame.
  */
 export function Footer() {
@@ -39,16 +52,9 @@ export function Footer() {
                 aria-label={s.name}
                 target="_blank"
                 rel="noreferrer"
-                className="-mx-2 -my-[9px] inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-white"
+                className={`${s.hit} inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-white`}
               >
-                <img
-                  src={s.icon}
-                  alt=""
-                  width={s.size}
-                  height={s.size}
-                  loading="lazy"
-                  style={{ width: s.size, height: s.size }}
-                />
+                <img src={s.icon} alt="" width={s.size} height={s.size} loading="lazy" />
               </a>
             ))}
           </div>

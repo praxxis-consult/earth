@@ -7,7 +7,8 @@ import { WaitlistCard } from "./WaitlistCard";
  * Flow layout: padding 160 + headline 304 + gap 400 + card 560 + padding 120 = 1544 at 1440.
  * The gap is clamp(120px, 50vw − 320px, 400px): 400 at ≥1440, 320 at 1280, 192 at 1024, 120 at ≤880.
  * Below 1280px the type scale and paddings are ours; the file has no mobile frame.
- * Phones get an art-directed portrait crop centred on the tractor; desktops get Figma's crop.
+ * Phones get an art-directed portrait crop centred on the tractor; desktops get Figma's crop. Above 1800px
+ * the crop shifts up slightly so the subtitle does not sit on the brightest band.
  */
 export function Hero() {
   return (
@@ -27,7 +28,7 @@ export function Hero() {
           height={1800}
           fetchPriority="high"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover object-bottom"
+          className="absolute inset-0 h-full w-full object-cover object-bottom min-[1800px]:object-[50%_80%]"
         />
       </picture>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,11,9,0.62)_8.8%,rgba(12,11,9,0.25)_42.2%,rgba(12,11,9,0.88)_88%)]" />
@@ -36,7 +37,7 @@ export function Hero() {
           <h1 className="w-full text-center text-[44px] font-bold leading-[1.05] tracking-[-1.1px] text-paper md:text-[56px] md:leading-[64px] md:tracking-[-1.4px] xl:text-[80px] xl:leading-[96px] xl:tracking-[-2px]">
             Be The First To Trade When Earth Opens
           </h1>
-          {/* #CBCBCB is Figma's colour; the shadow lifts it past AA on the bright grass bands. */}
+          {/* #CBCBCB is Figma's colour. The shadow helps on the bright grass bands; contrast over a photo cannot be guaranteed. */}
           <p className="w-full max-w-[680px] text-center text-[17px] font-medium leading-[26px] text-[#CBCBCB] [text-shadow:0_1px_2px_rgba(12,11,9,0.45)] md:text-[18px] md:leading-7 xl:text-[20px] xl:leading-8">
             Earth connects farms, food stores, and verified natural resource producers directly to
             buyers. No speculative middlemen, zero escrow holds, with direct split payment and

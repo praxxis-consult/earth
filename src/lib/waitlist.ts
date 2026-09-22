@@ -1,4 +1,5 @@
-import { put } from "@vercel/blob";
+import { head, put } from "@vercel/blob";
+import { createHash } from "node:crypto";
 
 export const INTERESTS = ["Buying", "Selling", "Both"] as const;
 export const CITIES = [
@@ -55,9 +56,56 @@ export function validate(
   };
 }
 
-/** Stores one entry as a private JSON object. One object per sign-up; the email is the key, so a repeat sign-up overwrites itself. */
-export async function save(entry: WaitlistEntry, meta: { userAgent: string | null }) {
-  const key = `waitlist/${entry.email.replace(/[^a-z0-9@._+-]/g, "_")}.json`;
+/** The honeypot field is invisible to people; bots that fill every input reveal themselves. */
+export const HONEYPOT_FIELD = "website";
+
+export function looksAutomated(raw: Record<string, unknown>, request: Request): boolean {
+  if (typeof raw[HONEYPOT_FIELD] === "string" && (raw[HONEYPOT_FIELD] as string).length > 0)
+    return true;
+  // Browsers send Sec-Fetch-Site; a form on this site is "same-origin" (or "none" when typed/redirected).
+  const site = request.headers.get("sec-fetch-site");
+  if (site === "cross-site") return true;
+  return false;
+}
+
+/**
+ * Best-effort rate limit per client address, kept in the instance's memory. Serverless instances
+ * come and go, so this slows a flood rather than stopping it; a platform-level rule is still needed
+ * for real abuse. 5 sign-ups per address per hour is far above any honest use.
+ */
+const buckets = new Map<string, { count: number; reset: number }>();
+export function rateLimited(request: Request, limit = 5, windowMs = 60 * 60 * 1000): boolean {
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+  const now = Date.now();
+  const b = buckets.get(ip);
+  if (!b || b.reset < now) {
+    buckets.set(ip, { count: 1, reset: now + windowMs });
+    return false;
+  }
+  b.count += 1;
+  return b.count > limit;
+}
+
+/** One private JSON object per email. Keyed by a hash so no two addresses can share a key. */
+function keyFor(email: string) {
+  return `waitlist/${createHash("sha256").update(email).digest("hex")}.json`;
+}
+
+/**
+ * Stores an entry. A repeat sign-up with the same email is accepted but changes nothing, so an
+ * existing person's details and place in the list can never be overwritten from the outside.
+ * Returns whether this was a new entry.
+ */
+export async function save(
+  entry: WaitlistEntry,
+  meta: { userAgent: string | null },
+): Promise<boolean> {
+  const key = keyFor(entry.email);
+  const existing = await head(key).catch(() => null);
+  if (existing) return false;
   await put(
     key,
     JSON.stringify({ ...entry, userAgent: meta.userAgent, createdAt: new Date().toISOString() }),
@@ -65,7 +113,8 @@ export async function save(entry: WaitlistEntry, meta: { userAgent: string | nul
       access: "private",
       contentType: "application/json",
       addRandomSuffix: false,
-      allowOverwrite: true,
+      allowOverwrite: false,
     },
   );
+  return true;
 }

@@ -17,8 +17,8 @@ export function JoinButton({
   /** Nav use: drops the label below 360px so the wordmark is never covered. */
   compact?: boolean;
 }) {
-  const classes = `inline-flex h-12 items-center justify-center gap-2 rounded-[30px] bg-earth-green px-6 py-4 transition-colors hover:bg-[#006946] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-earth-green disabled:cursor-wait disabled:opacity-70 ${
-    compact ? "px-4 min-[360px]:px-6" : ""
+  const classes = `inline-flex h-12 items-center justify-center gap-2 rounded-[30px] bg-earth-green py-4 transition-colors hover:bg-[#006946] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-earth-green disabled:cursor-wait disabled:opacity-70 ${
+    compact ? "px-4 min-[360px]:px-6" : "px-6"
   } ${className}`;
   const inner = (
     <>

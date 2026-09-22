@@ -26,7 +26,7 @@ const ITEMS = [
 
 /**
  * Figma "faqs" component: default 846×72, expanded 846×136; radius 25, fill #F9F9F9, padding 24;
- * question 16px SemiBold −0.32 #141414; answer 14px Regular lh 24 −0.32 #807E7E at y 64, 758 wide;
+ * question 16px SemiBold −0.32 #141414; answer 14px Regular lh 24 −0.28 #807E7E at y 64, 758 wide;
  * icon 24px at x 798 (tabler:plus ↔ ic:round-minus). Answer colour raised from Figma's #807E7E to #6B6969 for AA (5.2:1). ON_CLICK → CHANGE_TO, smart animate, gentle, ~1s.
  * The answer sits at y 64, 8px above the 72px header row's bottom edge, hence the negative margin.
  */
@@ -76,6 +76,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
 /**
  * Figma "what we deal" (218:1420): padding 80/297, gap 64, centred, white. Header 628 wide gap 8; list 846 wide gap 20.
  * The intro copy in Figma was real-estate template text ("property… leasing"); replaced with product copy at the same spec.
+ * Below 768px the paddings, gaps and type sizes are ours; the file has no mobile frame.
  */
 export function Faq() {
   return (

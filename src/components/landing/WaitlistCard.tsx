@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { JoinButton } from "./JoinButton";
-import { CITIES, INTERESTS, validate, type FieldErrors } from "@/lib/waitlist";
+import { CITIES, HONEYPOT_FIELD, INTERESTS, validate, type FieldErrors } from "@/lib/waitlist";
 
 /**
  * Figma "Frame 1000011533" (213:1054 etc.): 48px tall, padding 12/16, gap 8, radius 30,
@@ -8,7 +8,7 @@ import { CITIES, INTERESTS, validate, type FieldErrors } from "@/lib/waitlist";
  * Placeholder 16px Regular white 75%. Focus shows a 2px ring, which the design does not specify.
  */
 const fieldClass =
-  "h-12 w-full rounded-[30px] border border-[#E4DEDE]/60 bg-transparent px-4 py-3 text-[16px] font-normal leading-6 text-white outline-none placeholder:text-white/75 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B2A1E] aria-[invalid=true]:border-[#FFB4A8]";
+  "h-12 w-full rounded-[30px] border border-[#E4DEDE]/60 bg-transparent px-4 py-3 text-[16px] font-normal leading-6 text-white outline-none placeholder:text-white/75 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0 aria-[invalid=true]:border-[#FFB4A8]";
 
 type Status = "idle" | "sending" | "joined" | "error";
 
@@ -82,17 +82,23 @@ function Select({
  * Below 768px the form is one column with 20px card padding; the file has no mobile frame.
  *
  * Submission: the hydrated form posts JSON to /api/waitlist. Before hydration the same form posts
- * urlencoded to the same URL (method/action), so nothing is ever sent as a GET.
+ * urlencoded to the same URL (method/action) with native validation, so nothing is ever sent as a GET.
+ * The card carries scroll-margin so the sticky header never covers its title when linked to.
  */
 export function WaitlistCard() {
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState("");
+  const [hydrated, setHydrated] = useState(false);
   const statusId = useId();
+  const titleId = useId();
 
   // Outcome of a pre-hydration (plain HTML) submit comes back on the URL.
   useEffect(() => {
+    setHydrated(true);
     const flag = new URLSearchParams(window.location.search).get("waitlist");
+    if (flag)
+      window.history.replaceState(null, "", window.location.pathname + window.location.hash);
     if (flag === "joined") setStatus("joined");
     else if (flag === "error") {
       setStatus("error");
@@ -158,10 +164,11 @@ export function WaitlistCard() {
       id="waitlist"
       method="post"
       action="/api/waitlist"
-      noValidate
+      noValidate={hydrated}
       onSubmit={onSubmit}
+      aria-labelledby={titleId}
       aria-describedby={statusId}
-      className="flex w-full max-w-[1200px] flex-col rounded-[30px] bg-white/10 px-5 py-8 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] backdrop-blur-[12px] md:px-6 md:py-10 md:backdrop-blur-[20px] [@media(prefers-reduced-transparency:reduce)]:bg-[#13221A]/90 [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none"
+      className="flex w-full max-w-[1200px] scroll-mt-[88px] flex-col rounded-[30px] md:scroll-mt-28 bg-white/10 px-5 py-8 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] backdrop-blur-[12px] md:px-6 md:py-10 md:backdrop-blur-[20px] [@media(prefers-reduced-transparency:reduce)]:bg-[#13221A]/90 [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none"
     >
       <div className="flex w-full max-w-[564px] flex-col gap-2">
         <h2 className="text-[24px] font-semibold leading-8 tracking-[-1px] text-white">
@@ -170,6 +177,21 @@ export function WaitlistCard() {
         <p className="text-[15px] font-normal leading-6 text-[#E4DEDE]">
           Submit your details below to get notified when we launch.
         </p>
+      </div>
+
+      {/* Honeypot: hidden from people and assistive tech; bots that fill it are dropped server-side. */}
+      <div
+        className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden"
+        aria-hidden="true"
+      >
+        <label htmlFor={HONEYPOT_FIELD}>Website</label>
+        <input
+          id={HONEYPOT_FIELD}
+          name={HONEYPOT_FIELD}
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
       </div>
 
       <div className="mt-8 flex w-full flex-col gap-6 md:mt-10">
@@ -183,9 +205,9 @@ export function WaitlistCard() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="flex flex-col gap-2">
-            {/* Figma: "Name" Regular 400, "(optional)" Medium 500 (characterStyleOverrides). */}
-            <label htmlFor="name" className="block text-[16px] font-normal leading-6 text-white">
-              Name <span className="font-medium">(optional)</span>
+            {/* Figma 213:1059 characterStyleOverrides: "Name " Medium white, "(optional)" Medium #E4DEDE. */}
+            <label htmlFor="name" className="block text-[16px] font-medium leading-6 text-white">
+              Name <span className="text-[#E4DEDE]">(optional)</span>
             </label>
             <input
               id="name"
@@ -226,6 +248,7 @@ export function WaitlistCard() {
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="phone" className="block text-[16px] font-medium leading-6 text-white">
+              {/* Figma says only "Phone"; "(optional)" is added so required fields are unambiguous. */}
               Phone <span className="font-normal text-[#E4DEDE]">(optional)</span>
             </label>
             <input
