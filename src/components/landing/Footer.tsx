@@ -14,6 +14,7 @@ const SOCIAL = [
     href: "https://instagram.com",
     icon: "/figma/social-instagram.svg",
     size: 24,
+    hit: "-mx-[10px] -my-[10px]",
   },
   {
     name: "LinkedIn",
@@ -52,7 +53,7 @@ export function Footer() {
                 aria-label={s.name}
                 target="_blank"
                 rel="noreferrer"
-                className={`${s.hit} inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-white`}
+                className={`${s.hit ?? ""} inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-white`}
               >
                 <img src={s.icon} alt="" width={s.size} height={s.size} loading="lazy" />
               </a>

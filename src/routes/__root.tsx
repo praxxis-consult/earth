@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
+      <title>Page not found — Earth</title>
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-[#141414]">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-[#141414]">Page not found</h2>
@@ -98,7 +99,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
-        {/* Rendered before HeadContent so the connections open before the font stylesheet is discovered. */}
+        {/* React hoists stylesheets above these links; the early connection is opened by the Link header in vercel.json. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <HeadContent />

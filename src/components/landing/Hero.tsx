@@ -17,7 +17,7 @@ export function Hero() {
         <source media="(max-width: 767px)" srcSet="/figma/hero-m.webp" type="image/webp" />
         <source media="(max-width: 767px)" srcSet="/figma/hero-m.jpg" />
         <source
-          srcSet="/figma/hero-1440.webp 1440w, /figma/hero-2000.webp 2000w"
+          srcSet="/figma/hero-1000.webp 1000w, /figma/hero-1440.webp 1440w, /figma/hero-2000.webp 2000w"
           sizes="100vw"
           type="image/webp"
         />

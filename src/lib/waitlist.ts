@@ -57,7 +57,7 @@ export function validate(
 }
 
 /** The honeypot field is invisible to people; bots that fill every input reveal themselves. */
-export const HONEYPOT_FIELD = "website";
+export const HONEYPOT_FIELD = "contact_9f2";
 
 export function looksAutomated(raw: Record<string, unknown>, request: Request): boolean {
   if (typeof raw[HONEYPOT_FIELD] === "string" && (raw[HONEYPOT_FIELD] as string).length > 0)
@@ -71,10 +71,11 @@ export function looksAutomated(raw: Record<string, unknown>, request: Request): 
 /**
  * Best-effort rate limit per client address, kept in the instance's memory. Serverless instances
  * come and go, so this slows a flood rather than stopping it; a platform-level rule is still needed
- * for real abuse. 5 sign-ups per address per hour is far above any honest use.
+ * for real abuse. Nigerian mobile carriers put thousands of people behind one address, so the limit
+ * is deliberately generous: 120 valid sign-ups per address per hour.
  */
 const buckets = new Map<string, { count: number; reset: number }>();
-export function rateLimited(request: Request, limit = 5, windowMs = 60 * 60 * 1000): boolean {
+export function rateLimited(request: Request, limit = 120, windowMs = 60 * 60 * 1000): boolean {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     request.headers.get("x-real-ip") ||

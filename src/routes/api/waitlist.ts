@@ -37,19 +37,19 @@ export const Route = createFileRoute("/api/waitlist")({
         // A bot gets the same happy response as a person, and nothing is stored.
         if (looksAutomated(raw, request))
           return isJson ? Response.json({ ok: true }) : back("joined");
-        if (rateLimited(request))
-          return fail(
-            429,
-            "Too many sign-ups from this connection. Please try again later.",
-            "error",
-          );
-
         const result = validate(raw);
         if ("errors" in result) {
           return isJson
             ? Response.json({ ok: false, errors: result.errors }, { status: 400 })
             : back("invalid");
         }
+        // Counted after validation, so typos never eat into a shared address's allowance.
+        if (rateLimited(request))
+          return fail(
+            429,
+            "A lot of people on your connection just signed up. Please try again in a few minutes.",
+            "busy",
+          );
         try {
           await save(result.entry, { userAgent: request.headers.get("user-agent") });
         } catch (err) {

@@ -106,6 +106,11 @@ export function WaitlistCard() {
     } else if (flag === "invalid") {
       setStatus("error");
       setMessage("Please check the details you entered and try again.");
+    } else if (flag === "busy") {
+      setStatus("error");
+      setMessage(
+        "A lot of people on your connection just signed up. Please try again in a few minutes.",
+      );
     }
   }, []);
 
@@ -181,7 +186,7 @@ export function WaitlistCard() {
 
       {/* Honeypot: hidden from people and assistive tech; bots that fill it are dropped server-side. */}
       <div className="sr-only" aria-hidden="true">
-        <label htmlFor={HONEYPOT_FIELD}>Website</label>
+        <label htmlFor={HONEYPOT_FIELD}>Leave this empty</label>
         <input
           id={HONEYPOT_FIELD}
           name={HONEYPOT_FIELD}
@@ -246,7 +251,7 @@ export function WaitlistCard() {
           <div className="flex flex-col gap-2">
             <label htmlFor="phone" className="block text-[16px] font-medium leading-6 text-white">
               {/* Figma says only "Phone"; "(optional)" is added so required fields are unambiguous. */}
-              Phone <span className="font-normal text-[#E4DEDE]">(optional)</span>
+              Phone <span className="text-[#E4DEDE]">(optional)</span>
             </label>
             <input
               id="phone"
