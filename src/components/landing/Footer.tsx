@@ -16,6 +16,7 @@ const SOCIAL = [
  * Figma "nav" footer (213:1146): 1440×446. Gradient 0deg #0C2310 → #2F893F with handles at 99% and −53%,
  * so in CSS the stops sit at 1% and 153%. Content frame at (120,64) 1200 wide, gap 40.
  * Bottom bar at y 314: padding 24/0, 1px top border #9C9C9C 50%, space-between.
+ * Built as flow: 64 + 170 + 80 + 68 + 64 = 446 at desktop. Narrow widths stack the bottom bar; ours, no mobile frame.
  */
 export function Footer() {
   return (
@@ -23,8 +24,8 @@ export function Footer() {
       className="w-full"
       style={{ background: "linear-gradient(0deg, #0C2310 1%, #2F893F 153%)" }}
     >
-      <div className="relative mx-auto h-[446px] w-full max-w-[1440px]">
-        <div className="absolute left-[120px] top-16 flex w-[1200px] flex-col gap-10">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col px-5 pb-10 pt-12 md:px-10 md:pb-16 md:pt-16 xl:px-[120px]">
+        <div className="flex w-full flex-col gap-10">
           <div className="flex flex-col gap-6">
             <Logo tone="white" className="self-start" />
             <p className="text-[15px] font-normal leading-6 text-white/75">
@@ -47,7 +48,7 @@ export function Footer() {
             ))}
           </div>
         </div>
-        <div className="absolute left-[120px] top-[314px] flex h-[68px] w-[1200px] items-center justify-between border-t border-[#9C9C9C]/50">
+        <div className="mt-12 flex w-full flex-col gap-2 border-t border-[#9C9C9C]/50 py-6 md:mt-20 md:h-[68px] md:flex-row md:items-center md:justify-between md:py-0">
           <p className="text-[14px] font-normal leading-5 text-white">
             © Copyright 2026 Earth Trading Group, All Rights Reserved.
           </p>

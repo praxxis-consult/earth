@@ -63,8 +63,11 @@ function Select({
 
 /**
  * Figma "Frame 2147237483" (213:1050): 1200×560 at (120,864), fill white 10%, radius 30, GLASS effect.
- * Children are absolutely placed: title block (24,40), form (24,144) 1152 wide, button (273,472) 588×48.
+ * Children in Figma are absolutely placed: title block (24,40), form (24,144) 1152 wide, button (273,472) 588×48.
+ * Built as flow: 40 + 64 + 40 + 288 + 40 + 48 + 40 = 560 at desktop. The button is centred (x 306) rather than
+ * at Figma's x 273, because a flow layout cannot reproduce an off-centre absolute offset responsively.
  * The GLASS effect exports no parameters; the blur strength and the 1px light rim are read from the render.
+ * Below 768px the form is one column with 20px card padding; the file has no mobile frame.
  */
 export function WaitlistCard() {
   const [submitted, setSubmitted] = useState(false);
@@ -78,9 +81,9 @@ export function WaitlistCard() {
     <form
       id="waitlist"
       onSubmit={onSubmit}
-      className="absolute left-[120px] top-[864px] h-[560px] w-[1200px] rounded-[30px] bg-white/10 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] backdrop-blur-[20px]"
+      className="flex w-full max-w-[1200px] flex-col rounded-[30px] bg-white/10 px-5 py-8 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] backdrop-blur-[20px] md:px-6 md:py-10"
     >
-      <div className="absolute left-6 top-10 flex w-[564px] flex-col gap-2">
+      <div className="flex w-full max-w-[564px] flex-col gap-2">
         <h2 className="text-[24px] font-semibold leading-8 tracking-[-1px] text-white">
           Join The Waitlist
         </h2>
@@ -89,13 +92,13 @@ export function WaitlistCard() {
         </p>
       </div>
 
-      <div className="absolute left-6 top-[144px] flex w-[1152px] flex-col gap-6">
-        <div className="flex h-20 flex-col gap-2">
+      <div className="mt-8 flex w-full flex-col gap-6 md:mt-10">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="interest">I’m interested in...</Label>
           <Select id="interest" placeholder="Select an option" options={INTERESTS} required />
         </div>
 
-        <div className="grid h-[184px] grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="flex flex-col gap-2">
             {/* Figma: "Name" Regular 400, "(optional)" Medium 500 (characterStyleOverrides). */}
             <label htmlFor="name" className="block text-[16px] font-normal leading-6 text-white">
@@ -137,12 +140,12 @@ export function WaitlistCard() {
         </div>
       </div>
 
-      <div className="absolute left-[273px] top-[472px]">
-        <JoinButton type="submit" className="w-[588px]" />
+      <div className="mt-8 flex w-full justify-center md:mt-10">
+        <JoinButton type="submit" className="w-full md:w-[588px]" />
       </div>
 
       {submitted && (
-        <p role="status" className="absolute bottom-3 left-6 text-[14px] leading-5 text-white/75">
+        <p role="status" className="mt-4 text-center text-[14px] leading-5 text-white/75">
           Thanks. The waitlist opens soon and we will confirm your place by email.
         </p>
       )}

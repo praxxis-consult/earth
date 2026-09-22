@@ -34,15 +34,15 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
   const [open, setOpen] = useState(false);
   const id = `faq-${index}`;
   return (
-    <div className="w-[846px] rounded-[25px] bg-[#F9F9F9]">
+    <div className="w-full max-w-[846px] rounded-[25px] bg-[#F9F9F9]">
       <button
         type="button"
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-[72px] w-full items-center justify-between px-6 text-left"
+        className="flex min-h-[64px] w-full items-center justify-between gap-4 px-5 py-4 text-left md:h-[72px] md:px-6 md:py-0"
       >
-        <span className="w-[628px] text-[16px] font-semibold leading-6 tracking-[-0.32px] text-[#141414]">
+        <span className="min-w-0 flex-1 text-[15px] font-semibold md:w-[628px] md:flex-none md:text-[16px] leading-6 tracking-[-0.32px] text-[#141414]">
           {q}
         </span>
         <img
@@ -59,7 +59,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <p className="-mt-2 w-[758px] px-6 pb-6 text-[14px] font-normal leading-6 tracking-[-0.28px] text-[#807E7E]">
+          <p className="-mt-2 w-full max-w-[758px] px-5 pb-5 text-[14px] md:px-6 md:pb-6 font-normal leading-6 tracking-[-0.28px] text-[#807E7E]">
             {a}
           </p>
         </div>
@@ -71,18 +71,18 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
 /** Figma "what we deal" (218:1420): padding 80/297, gap 64, centred, white. Header 628 wide gap 8; list 846 wide gap 20. */
 export function Faq() {
   return (
-    <section className="flex w-full flex-col items-center gap-16 bg-white px-[297px] py-20">
-      <div className="flex w-[628px] flex-col items-center gap-2">
-        <h2 className="w-full text-center text-[40px] font-bold leading-[64px] tracking-[-0.8px] text-[#141414]">
+    <section className="flex w-full flex-col items-center gap-10 bg-white px-5 py-14 md:gap-16 md:px-10 md:py-20 xl:px-[297px]">
+      <div className="flex w-full max-w-[628px] flex-col items-center gap-2">
+        <h2 className="w-full text-center text-[28px] font-bold leading-9 tracking-[-0.56px] text-[#141414] md:text-[40px] md:leading-[64px] md:tracking-[-0.8px]">
           Frequently Asked Questions
         </h2>
-        <p className="w-full text-center text-[16px] font-normal leading-8 tracking-[-0.32px] text-[#666666]">
+        <p className="w-full text-center text-[15px] font-normal leading-7 tracking-[-0.3px] text-[#666666] md:text-[16px] md:leading-8 md:tracking-[-0.32px]">
           We’re dedicated to revolutionizing the way property and people connect. Our platform is
           built on ease of access and trust to streamline the buying, selling, and leasing process
           for everyone.
         </p>
       </div>
-      <div className="flex w-[846px] flex-col gap-5">
+      <div className="flex w-full max-w-[846px] flex-col gap-4 md:gap-5">
         {ITEMS.map((item, i) => (
           <FaqItem key={item.q} q={item.q} a={item.a} index={i} />
         ))}
