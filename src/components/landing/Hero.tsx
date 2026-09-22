@@ -5,6 +5,7 @@ import { WaitlistCard } from "./WaitlistCard";
  * Image rect 1440×1800 at y −256 (cover). Gradient rect: 180deg rgba(12,11,9) .62 → .25 → .88,
  * stops at 10/48/100% over a handle that ends at 88% height → 8.8% / 42.2% / 88%.
  * Headline block at (350,160) 741 wide; card at (120,864) 1200×560.
+ * The image and gradient bleed to the viewport edge; the content sits in a 1440px max container.
  */
 export function Hero() {
   return (
@@ -23,17 +24,19 @@ export function Hero() {
             "linear-gradient(180deg, rgba(12,11,9,0.62) 8.8%, rgba(12,11,9,0.25) 42.2%, rgba(12,11,9,0.88) 88%)",
         }}
       />
-      <div className="absolute left-1/2 top-[160px] flex w-[741px] -translate-x-1/2 flex-col items-center gap-4">
-        <h1 className="w-full text-center text-[80px] font-bold leading-[96px] tracking-[-2px] text-[#F8F6F1]">
-          Be The First To Trade When Earth Opens
-        </h1>
-        <p className="w-[680px] text-center text-[20px] font-medium leading-8 text-[#CBCBCB]">
-          Earth connects farms, food stores, and verified natural resource producers directly to
-          buyers. No speculative middlemen, zero escrow holds, with direct split payment and
-          doorstep courier delivery.
-        </p>
+      <div className="relative mx-auto h-full w-full max-w-[1440px]">
+        <div className="absolute left-1/2 top-[160px] flex w-[741px] -translate-x-1/2 flex-col items-center gap-4">
+          <h1 className="w-full text-center text-[80px] font-bold leading-[96px] tracking-[-2px] text-[#F8F6F1]">
+            Be The First To Trade When Earth Opens
+          </h1>
+          <p className="w-[680px] text-center text-[20px] font-medium leading-8 text-[#CBCBCB]">
+            Earth connects farms, food stores, and verified natural resource producers directly to
+            buyers. No speculative middlemen, zero escrow holds, with direct split payment and
+            doorstep courier delivery.
+          </p>
+        </div>
+        <WaitlistCard />
       </div>
-      <WaitlistCard />
     </section>
   );
 }

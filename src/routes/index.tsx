@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <main className="mx-auto w-[1440px] max-w-full overflow-x-hidden bg-white text-[#141414]">
+    <main className="w-full overflow-x-hidden bg-white text-[#141414]">
       <NavBar />
       <Hero />
       <Faq />
