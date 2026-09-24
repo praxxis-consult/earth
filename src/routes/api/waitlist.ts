@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { join, looksAutomated, rateLimited, validate } from "@/lib/waitlist";
+import { clientIp, join, looksAutomated, rateLimited, validate } from "@/lib/waitlist";
 
 const notAllowed = () =>
   new Response("Method not allowed", { status: 405, headers: { allow: "POST" } });
@@ -53,11 +53,11 @@ export const Route = createFileRoute("/api/waitlist")({
                   message:
                     "A lot of people on your connection just signed up. Please try again in a few minutes.",
                 },
-                { status: 429 },
+                { status: 429, headers: { "retry-after": "600" } },
               )
             : back("busy");
 
-        const out = await join(result.entry);
+        const out = await join(result.entry, clientIp(request));
         if (!out.ok) {
           return isJson
             ? Response.json(
@@ -66,7 +66,9 @@ export const Route = createFileRoute("/api/waitlist")({
               )
             : back(out.status === 400 ? "invalid" : "error");
         }
-        return isJson ? Response.json({ ok: true, status: out.data.status }) : back("check");
+        return isJson
+          ? Response.json({ ok: true, status: out.data?.status ?? "pending_verification" })
+          : back("check");
       },
     },
   },

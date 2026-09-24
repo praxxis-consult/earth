@@ -13,7 +13,13 @@ import { WaitlistCard } from "./WaitlistCard";
  * The gap is clamp(112px, 50vw − 320px, 400px): 112 up to 864px, 320 at 1280, 400 at ≥1440.
  * Between 768 and 1279 the type scale is ours; neither frame covers it.
  */
-export function Hero() {
+export function Hero({
+  detectedCountry = "",
+  initialFlag = "",
+}: {
+  detectedCountry?: string;
+  initialFlag?: string;
+}) {
   return (
     <section className="relative w-full overflow-hidden bg-white">
       <picture>
@@ -47,7 +53,7 @@ export function Hero() {
             doorstep courier delivery.
           </p>
         </div>
-        <WaitlistCard />
+        <WaitlistCard detectedCountry={detectedCountry} initialFlag={initialFlag} />
       </div>
     </section>
   );
