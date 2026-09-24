@@ -1,6 +1,13 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { JoinButton } from "./JoinButton";
-import { CITIES, HONEYPOT_FIELD, INTERESTS, validate, type FieldErrors } from "@/lib/waitlist";
+import {
+  CITIES,
+  COUNTRIES,
+  HONEYPOT_FIELD,
+  INTERESTS,
+  validate,
+  type FieldErrors,
+} from "@/lib/waitlist";
 
 /**
  * Figma "Frame 1000011533" (213:1054 etc.): 48px tall, padding 12/16, gap 8, radius 30,
@@ -8,7 +15,7 @@ import { CITIES, HONEYPOT_FIELD, INTERESTS, validate, type FieldErrors } from "@
  * Placeholder 16px Regular white 75%. Focus shows a 2px ring, which the design does not specify.
  */
 const fieldClass =
-  "h-12 w-full rounded-[30px] border border-[#E4DEDE]/60 bg-transparent px-4 py-3 text-[16px] font-normal leading-6 text-white outline-none placeholder:text-white/75 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0 aria-[invalid=true]:border-[#FFB4A8]";
+  "h-12 w-full rounded-[30px] border border-[#E4DEDE]/60 bg-transparent px-4 py-3 text-[14px] font-normal leading-5 text-white outline-none placeholder:text-white/75 md:text-[16px] md:leading-6 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0 aria-[invalid=true]:border-[#FFB4A8]";
 
 type Status = "idle" | "sending" | "joined" | "error";
 
@@ -27,17 +34,22 @@ function Select({
   placeholder,
   options,
   error,
+  optional = false,
 }: {
   id: string;
   label: string;
   placeholder: string;
   options: readonly string[];
   error?: string | undefined;
+  optional?: boolean;
 }) {
   const errId = `${id}-error`;
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="block text-[16px] font-medium leading-6 text-white">
+      <label
+        htmlFor={id}
+        className="block text-[14px] font-medium leading-5 text-white md:text-[16px] md:leading-6"
+      >
         {label}
       </label>
       <div className="relative">
@@ -45,11 +57,11 @@ function Select({
         <select
           id={id}
           name={id}
-          required
+          required={!optional}
           defaultValue=""
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errId : undefined}
-          className={`${fieldClass} appearance-none pr-12 invalid:text-white/75`}
+          className={`${fieldClass} appearance-none pr-12 invalid:text-white/75 ${optional ? 'has-[option[value=""]:checked]:text-white/75' : ""}`}
         >
           <option value="" disabled className="text-black">
             {placeholder}
@@ -173,13 +185,13 @@ export function WaitlistCard() {
       onSubmit={onSubmit}
       aria-labelledby={titleId}
       aria-describedby={statusId}
-      className="flex w-full max-w-[1200px] scroll-mt-[88px] flex-col rounded-[30px] md:scroll-mt-28 bg-white/10 px-5 py-8 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] backdrop-blur-[12px] md:px-6 md:py-10 md:backdrop-blur-[20px] [@media(prefers-reduced-transparency:reduce)]:bg-[#13221A]/90 [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none"
+      className="flex w-full max-w-[1200px] scroll-mt-[88px] flex-col rounded-[30px] md:scroll-mt-28 bg-white/10 px-4 py-6 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] backdrop-blur-[12px] md:px-6 md:py-10 md:backdrop-blur-[20px] [@media(prefers-reduced-transparency:reduce)]:bg-[#13221A]/90 [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none"
     >
-      <div className="flex w-full max-w-[564px] flex-col gap-2">
-        <h2 className="text-[24px] font-semibold leading-8 tracking-[-1px] text-white">
+      <div className="flex w-full max-w-[564px] flex-col gap-1 md:gap-2">
+        <h2 className="text-[20px] font-semibold leading-8 tracking-[-1px] text-white md:text-[24px]">
           Join The Waitlist
         </h2>
-        <p className="text-[15px] font-normal leading-6 text-[#E4DEDE]">
+        <p className="text-[14px] font-normal leading-[18px] text-[#E4DEDE] md:text-[15px] md:leading-6">
           Submit your details below to get notified when we launch.
         </p>
       </div>
@@ -196,7 +208,7 @@ export function WaitlistCard() {
         />
       </div>
 
-      <div className="mt-8 flex w-full flex-col gap-6 md:mt-10">
+      <div className="mt-6 flex w-full flex-col gap-3 md:mt-10 md:gap-6">
         <Select
           id="interest"
           label="I’m interested in..."
@@ -205,10 +217,13 @@ export function WaitlistCard() {
           error={errors.interest}
         />
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-6">
           <div className="flex flex-col gap-2">
             {/* Figma 213:1059 characterStyleOverrides: "Name " Medium white, "(optional)" Medium #E4DEDE. */}
-            <label htmlFor="name" className="block text-[16px] font-medium leading-6 text-white">
+            <label
+              htmlFor="name"
+              className="block text-[14px] font-medium leading-5 text-white md:text-[16px] md:leading-6"
+            >
               Name <span className="text-[#E4DEDE]">(optional)</span>
             </label>
             <input
@@ -222,6 +237,17 @@ export function WaitlistCard() {
               className={fieldClass}
             />
           </div>
+          {/* Figma mobile 259:1955 has a Country field; the desktop frame does not. */}
+          <div className="md:hidden">
+            <Select
+              id="country"
+              label="Country"
+              placeholder="Select country"
+              options={COUNTRIES}
+              error={errors.country}
+              optional
+            />
+          </div>
           <Select
             id="city"
             label="City"
@@ -230,7 +256,10 @@ export function WaitlistCard() {
             error={errors.city}
           />
           <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="block text-[16px] font-medium leading-6 text-white">
+            <label
+              htmlFor="email"
+              className="block text-[14px] font-medium leading-5 text-white md:text-[16px] md:leading-6"
+            >
               Email Address
             </label>
             <input
@@ -249,7 +278,10 @@ export function WaitlistCard() {
             <FieldError id="email-error" message={errors.email} />
           </div>
           <div className="flex flex-col gap-2">
-            <label htmlFor="phone" className="block text-[16px] font-medium leading-6 text-white">
+            <label
+              htmlFor="phone"
+              className="block text-[14px] font-medium leading-5 text-white md:text-[16px] md:leading-6"
+            >
               {/* Figma says only "Phone"; "(optional)" is added so required fields are unambiguous. */}
               Phone <span className="text-[#E4DEDE]">(optional)</span>
             </label>
@@ -270,7 +302,27 @@ export function WaitlistCard() {
         </div>
       </div>
 
-      <div className="mt-8 flex w-full justify-center md:mt-10">
+      {/*
+       * Figma mobile 287:2155: 20px checkbox, radius 5, 1.5px #E4DEDE stroke, gap 8, 12px/20 #E4DEDE text.
+       * Checked variant 283:2124 is a solid #1A73E5 square with no tick, 300ms ease. The desktop frame has no
+       * consent row, so it is shown below md only.
+       */}
+      <div className="mt-3 flex items-start gap-2 md:hidden">
+        <input id="consent" name="consent" type="checkbox" className="peer sr-only" />
+        <label
+          htmlFor="consent"
+          aria-hidden="true"
+          className="h-5 w-5 shrink-0 cursor-pointer rounded-[5px] border-[1.5px] border-[#E4DEDE] transition-colors duration-300 ease-in-out peer-checked:border-[#1A73E5] peer-checked:bg-[#1A73E5] peer-focus-visible:ring-2 peer-focus-visible:ring-white"
+        />
+        <label
+          htmlFor="consent"
+          className="cursor-pointer text-[12px] font-normal leading-5 text-[#E4DEDE]"
+        >
+          I agree and consent to receiving waitlist updates from Earth.
+        </label>
+      </div>
+
+      <div className="mt-6 flex w-full justify-center md:mt-10">
         <JoinButton type="submit" className="w-full md:w-[588px]" disabled={status === "sending"} />
       </div>
 

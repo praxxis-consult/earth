@@ -2,6 +2,14 @@ import { head, put } from "@vercel/blob";
 import { createHash } from "node:crypto";
 
 export const INTERESTS = ["Buying", "Selling", "Both"] as const;
+export const COUNTRIES = [
+  "Nigeria",
+  "Ghana",
+  "Kenya",
+  "United Kingdom",
+  "United States",
+  "Other",
+] as const;
 export const CITIES = [
   "Lagos",
   "Abuja",
@@ -15,9 +23,13 @@ export const CITIES = [
 export type WaitlistEntry = {
   interest: (typeof INTERESTS)[number];
   name: string;
+  /** Asked on the mobile form only (Figma 259:1955); the desktop form has no country field. */
+  country: (typeof COUNTRIES)[number] | "";
   city: (typeof CITIES)[number];
   email: string;
   phone: string;
+  /** Consent to waitlist updates. Asked on the mobile form (Figma 287:2155); desktop has no checkbox. */
+  consent: boolean;
 };
 
 export type FieldErrors = Partial<Record<keyof WaitlistEntry, string>>;
@@ -36,9 +48,14 @@ export function validate(
   const email = s("email").toLowerCase();
   const phone = s("phone");
   const name = s("name").slice(0, 120);
+  const country = s("country");
+  const consentRaw = raw["consent"];
+  const consent = consentRaw === true || consentRaw === "on" || consentRaw === "true";
 
   if (!INTERESTS.includes(interest as WaitlistEntry["interest"]))
     errors.interest = "Choose what you're interested in.";
+  if (country && !COUNTRIES.includes(country as (typeof COUNTRIES)[number]))
+    errors.country = "Choose your country.";
   if (!CITIES.includes(city as WaitlistEntry["city"])) errors.city = "Choose your city.";
   if (!EMAIL.test(email) || email.length > 254) errors.email = "Enter a valid email address.";
   if (phone && !PHONE.test(phone))
@@ -48,10 +65,12 @@ export function validate(
   return {
     entry: {
       interest: interest as WaitlistEntry["interest"],
+      country: country as WaitlistEntry["country"],
       city: city as WaitlistEntry["city"],
       email,
       phone,
       name,
+      consent,
     },
   };
 }

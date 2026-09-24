@@ -34,16 +34,16 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
   const [open, setOpen] = useState(false);
   const id = `faq-${index}`;
   return (
-    <div className="w-full max-w-[846px] rounded-[25px] bg-[#F9F9F9]">
+    <div className="w-full max-w-[846px] rounded-[15px] bg-[#F9F9F9] md:rounded-[25px]">
       <button
         type="button"
         id={`${id}-btn`}
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-[64px] w-full items-center justify-between gap-4 rounded-[25px] px-5 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-earth-green md:h-[72px] md:px-6 md:py-0"
+        className="flex min-h-[56px] w-full items-center justify-between gap-4 rounded-[15px] px-4 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-earth-green md:h-[72px] md:rounded-[25px] md:px-6 md:py-0"
       >
-        <span className="min-w-0 flex-1 text-[15px] font-semibold md:text-[16px] leading-6 tracking-[-0.32px] text-[#141414]">
+        <span className="min-w-0 flex-1 text-[14px] font-semibold tracking-[-0.28px] md:text-[16px] md:tracking-[-0.32px] leading-6 text-[#141414]">
           {q}
         </span>
         <img
@@ -64,7 +64,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <p className="-mt-2 w-full max-w-[758px] px-5 pb-5 text-[14px] md:px-6 md:pb-6 font-normal leading-6 tracking-[-0.28px] text-[#6B6969]">
+          <p className="-mt-2 w-full max-w-[758px] px-4 pb-4 text-[14px] md:px-6 md:pb-6 font-normal leading-6 tracking-[-0.28px] text-[#6B6969]">
             {a}
           </p>
         </div>
@@ -76,22 +76,24 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
 /**
  * Figma "what we deal" (218:1420): padding 80/297, gap 64, centred, white. Header 628 wide gap 8; list 846 wide gap 20.
  * The intro copy in Figma was real-estate template text ("property… leasing"); replaced with product copy at the same spec.
- * Below 768px the paddings, gaps and type sizes are ours; the file has no mobile frame.
+ * Mobile, Figma 287:2161 / 259:1974: 130px above, 80px below, header 32/48 −2 and 14/24 Medium #666, items 342×56
+ * radius 15 padding 16 with 14px SemiBold −0.28 questions. The mobile frame's heading text is a paste error
+ * ("Be the first to trade…"); the desktop heading is used.
  */
 export function Faq() {
   return (
-    <section className="flex w-full flex-col items-center gap-10 bg-white px-5 py-14 md:gap-16 md:px-10 md:py-20">
-      <div className="flex w-full max-w-[628px] flex-col items-center gap-2">
-        <h2 className="w-full text-center text-[28px] font-bold leading-9 tracking-[-0.56px] text-[#141414] md:text-[40px] md:leading-[64px] md:tracking-[-0.8px]">
+    <section className="flex w-full flex-col items-center gap-10 bg-white px-6 pb-20 pt-[130px] md:gap-16 md:px-10 md:py-20">
+      <div className="flex w-full max-w-[628px] flex-col items-center gap-4 md:gap-2">
+        <h2 className="w-full text-center text-[32px] font-bold leading-[48px] tracking-[-2px] text-[#141414] md:text-[40px] md:leading-[64px] md:tracking-[-0.8px]">
           Frequently Asked Questions
         </h2>
-        <p className="w-full text-center text-[15px] font-normal leading-7 tracking-[-0.3px] text-[#666666] md:text-[16px] md:leading-8 md:tracking-[-0.32px]">
+        <p className="w-full text-center text-[14px] font-medium leading-6 text-[#666666] md:text-[16px] md:font-normal md:leading-8 md:tracking-[-0.32px]">
           Straight answers on how selling, delivery and payment work on Earth, so buyers and sellers
           know exactly what to expect, and what we will never do with their money, from the day we
           open in your city.
         </p>
       </div>
-      <div className="flex w-full max-w-[846px] flex-col gap-4 md:gap-5">
+      <div className="flex w-full max-w-[846px] flex-col gap-5">
         {ITEMS.map((item, i) => (
           <FaqItem key={item.q} q={item.q} a={item.a} index={i} />
         ))}
