@@ -1,4 +1,5 @@
 import { WaitlistCard } from "./WaitlistCard";
+import { useParallax } from "./useParallax";
 
 /**
  * Desktop, Figma "hero opt 1" (213:1043): 1440×1544, layout none. Image rect 1440×1800 at y −256 (cover)
@@ -20,9 +21,19 @@ export function Hero({
   detectedCountry?: string;
   initialFlag?: string;
 }) {
+  const { section, photo, copy, card } = useParallax();
   return (
-    <section className="relative w-full overflow-hidden bg-white">
-      <picture>
+    <section ref={section} className="relative w-full overflow-hidden bg-white">
+      {/*
+       * Parallax: the photo box is taller than the section by --slack and sits that much higher, so
+       * useParallax can slide it down as the page scrolls without ever showing an edge. The card rises
+       * into view once it is near; the headline drifts up and out. All of it needs JS (html.js) and
+       * is skipped for prefers-reduced-motion, so the static page is exactly what it was.
+       */}
+      <picture
+        ref={photo}
+        className="absolute inset-x-0 top-[calc(-1*var(--slack))] h-[calc(100%+var(--slack))] will-change-transform [--slack:120px] md:[--slack:200px]"
+      >
         <source media="(max-width: 767px)" srcSet="/figma/hero-m.webp" type="image/webp" />
         <source media="(max-width: 767px)" srcSet="/figma/hero-m.jpg" />
         <source
@@ -37,12 +48,15 @@ export function Hero({
           height={1800}
           fetchPriority="high"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover object-top md:object-bottom min-[1800px]:object-[50%_80%]"
+          className="h-full w-full object-cover object-top md:object-bottom min-[1800px]:object-[50%_80%]"
         />
       </picture>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,11,9,0.62)_8.8%,rgba(12,11,9,0.25)_42.2%,rgba(12,11,9,0.88)_88%)]" />
       <div className="relative mx-auto flex w-full max-w-[1440px] flex-col items-center gap-[clamp(112px,calc(50vw-320px),400px)] px-6 pb-10 pt-[79px] md:px-10 md:pb-20 md:pt-24 xl:px-[120px] xl:pb-[120px] xl:pt-[160px]">
-        <div className="flex w-full max-w-[741px] flex-col items-center gap-4">
+        <div
+          ref={copy}
+          className="flex w-full max-w-[741px] flex-col items-center gap-4 will-change-transform"
+        >
           <h1 className="w-full text-center text-[32px] font-bold leading-10 tracking-[-2px] text-paper md:text-[56px] md:leading-[64px] md:tracking-[-1.4px] xl:text-[80px] xl:leading-[96px] xl:tracking-[-2px]">
             Be The First To Trade When Earth Opens
           </h1>
@@ -53,7 +67,9 @@ export function Hero({
             doorstep courier delivery.
           </p>
         </div>
-        <WaitlistCard detectedCountry={detectedCountry} initialFlag={initialFlag} />
+        <div ref={card} className="reveal flex w-full justify-center motion-reduce:transition-none">
+          <WaitlistCard detectedCountry={detectedCountry} initialFlag={initialFlag} />
+        </div>
       </div>
     </section>
   );

@@ -70,6 +70,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRoute({
   head: () => ({
+    // Marks the document before first paint so motion-only styles apply only where JS will run.
+    scripts: [{ children: "document.documentElement.classList.add('js')" }],
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
