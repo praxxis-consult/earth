@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { JoinButton } from "./JoinButton";
 import {
   CITIES,
@@ -7,7 +7,10 @@ import {
   INTERESTS,
   validate,
   type FieldErrors,
+  type Place,
 } from "@/lib/waitlist";
+
+const SITE = "https://earth-gamma-ecru.vercel.app";
 
 /**
  * Figma "Frame 1000011533" (213:1054 etc.): 48px tall, padding 12/16, gap 8, radius 30,
@@ -17,7 +20,23 @@ import {
 const fieldClass =
   "h-12 w-full rounded-[30px] border border-[#E4DEDE]/60 bg-transparent px-4 py-3 text-[14px] font-normal leading-5 text-white outline-none placeholder:text-white/75 md:text-[16px] md:leading-6 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0 aria-[invalid=true]:border-[#FFB4A8]";
 
-type Status = "idle" | "sending" | "joined" | "error";
+const labelClass = "block text-[14px] font-medium leading-5 text-white md:text-[16px] md:leading-6";
+
+const cardClass =
+  "flex w-full max-w-[1200px] scroll-mt-[88px] flex-col rounded-[30px] md:scroll-mt-28 bg-white/10 px-4 py-6 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] backdrop-blur-[12px] md:px-6 md:py-10 md:backdrop-blur-[20px] [@media(prefers-reduced-transparency:reduce)]:bg-[#13221A]/90 [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none";
+
+const linkClass =
+  "rounded text-[14px] font-medium leading-5 text-white underline decoration-white/60 underline-offset-4 hover:decoration-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-60";
+
+type Status = "idle" | "sending" | "error";
+/**
+ * form → verify → done. The API emails a six-digit code on sign-up; the place on the list and the
+ * share link only exist once that code is confirmed. The design has no frames for the last two
+ * steps, so they reuse the card, field and button styles from the first.
+ */
+type Step = "form" | "verify" | "done";
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function FieldError({ id, message }: { id: string; message?: string | undefined }) {
   if (!message) return null;
@@ -98,20 +117,30 @@ function Select({
  * The card carries scroll-margin so the sticky header never covers its title when linked to.
  */
 export function WaitlistCard() {
+  const [step, setStep] = useState<Step>("form");
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [email, setEmail] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [place, setPlace] = useState<Place | null>(null);
+  const [copied, setCopied] = useState(false);
   const statusId = useId();
   const titleId = useId();
+  const codeRef = useRef<HTMLInputElement>(null);
 
-  // Outcome of a pre-hydration (plain HTML) submit comes back on the URL.
+  // Outcome of a pre-hydration (plain HTML) submit comes back on the URL, as does a friend's ?ref= code.
   useEffect(() => {
     setHydrated(true);
-    const flag = new URLSearchParams(window.location.search).get("waitlist");
+    const params = new URLSearchParams(window.location.search);
+    const ref = (params.get("ref") ?? "").trim().toUpperCase();
+    if (/^[A-Z0-9]{8}$/.test(ref)) setReferralCode(ref);
+    const flag = params.get("waitlist");
     if (flag)
       window.history.replaceState(null, "", window.location.pathname + window.location.hash);
-    if (flag === "joined") setStatus("joined");
+    // "check": the no-JS submit went through, but this page never saw the email.
+    if (flag === "check") setStep("verify");
     else if (flag === "error") {
       setStatus("error");
       setMessage("We couldn't save your details. Please try again.");
@@ -152,7 +181,10 @@ export function WaitlistCard() {
         message?: string;
       };
       if (res.ok && data.ok) {
-        setStatus("joined");
+        setEmail(check.entry.email);
+        setStatus("idle");
+        setMessage("");
+        setStep("verify");
         form.reset();
       } else if (data.errors) {
         setErrors(data.errors);
@@ -167,14 +199,257 @@ export function WaitlistCard() {
     }
   }
 
+  async function post(path: string, body: unknown) {
+    const res = await fetch(path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      message?: string;
+      place?: Place;
+    };
+    return { ok: res.ok && data.ok === true, data };
+  }
+
+  async function onClaim(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const raw = Object.fromEntries(new FormData(e.currentTarget).entries());
+    const to = (typeof raw["email"] === "string" ? raw["email"] : email).trim().toLowerCase();
+    const code = String(raw["code"] ?? "").replace(/\D/g, "");
+    if (!EMAIL.test(to)) {
+      setStatus("error");
+      setMessage("Enter the email address you signed up with.");
+      return;
+    }
+    if (code.length !== 6) {
+      setStatus("error");
+      setMessage("Enter the six digits from the email.");
+      codeRef.current?.focus();
+      return;
+    }
+    setEmail(to);
+    setStatus("sending");
+    try {
+      const { ok, data } = await post("/api/waitlist/claim", { email: to, code });
+      if (ok && data.place) {
+        setPlace(data.place);
+        setStatus("idle");
+        setMessage("");
+        setStep("done");
+      } else {
+        setStatus("error");
+        setMessage(data.message ?? "That code isn't right. Check it and try again.");
+        codeRef.current?.focus();
+      }
+    } catch {
+      setStatus("error");
+      setMessage("You seem to be offline. Check your connection and try again.");
+    }
+  }
+
+  async function onResend() {
+    if (!email) {
+      setStatus("error");
+      setMessage("Enter the email address you signed up with, then ask for a new code.");
+      return;
+    }
+    setStatus("sending");
+    try {
+      const { ok, data } = await post("/api/waitlist/resend", { email });
+      setStatus(ok ? "idle" : "error");
+      setMessage(
+        ok
+          ? `We sent a new code to ${email}.`
+          : (data.message ?? "We couldn't send a new code. Please try again."),
+      );
+    } catch {
+      setStatus("error");
+      setMessage("You seem to be offline. Check your connection and try again.");
+    }
+  }
+
+  const shareUrl = place ? `${SITE}/?ref=${place.referralCode}` : "";
+  const shareText = `I just joined the waitlist for Earth, a marketplace for everything that grows from, is mined from or feeds from the earth. Join with my link and we both move up the list: ${shareUrl}`;
+
+  async function onCopy() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setStatus("error");
+      setMessage("Copy didn't work here. Select the link and copy it yourself.");
+    }
+  }
+
   const statusText =
-    status === "joined"
-      ? "You're on the list. We'll email you when Earth opens."
-      : status === "error"
-        ? message
-        : status === "sending"
+    status === "error"
+      ? message
+      : status === "sending"
+        ? step === "form"
           ? "Sending your details…"
-          : "";
+          : "One moment…"
+        : message;
+
+  // Always mounted so screen readers announce changes.
+  const statusEl = (
+    <p
+      id={statusId}
+      role="status"
+      aria-live="polite"
+      className={`text-center text-[14px] leading-5 ${statusText ? "mt-4" : "sr-only"} ${
+        status === "error" ? "text-[#FFB4A8]" : "text-white"
+      }`}
+    >
+      {statusText}
+    </p>
+  );
+
+  if (step === "verify") {
+    return (
+      <form
+        id="waitlist"
+        noValidate
+        onSubmit={onClaim}
+        aria-labelledby={titleId}
+        aria-describedby={statusId}
+        className={cardClass}
+      >
+        <div className="flex w-full max-w-[564px] flex-col gap-1 md:gap-2">
+          <h2
+            id={titleId}
+            className="text-[20px] font-semibold leading-8 tracking-[-1px] text-white md:text-[24px]"
+          >
+            Check your email
+          </h2>
+          <p className="text-[14px] font-normal leading-[18px] text-[#E4DEDE] md:text-[15px] md:leading-6">
+            {email
+              ? `We sent a six-digit code to ${email}. Enter it to confirm your place.`
+              : "We sent a six-digit code to your email. Enter it to confirm your place."}
+          </p>
+        </div>
+        <div className="mt-6 grid w-full grid-cols-1 gap-3 md:mt-10 md:grid-cols-2 md:gap-6">
+          {!email && (
+            <div className="flex flex-col gap-2">
+              <label htmlFor="verify-email" className={labelClass}>
+                Email Address
+              </label>
+              <input
+                id="verify-email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                inputMode="email"
+                placeholder="Enter email address"
+                className={fieldClass}
+              />
+            </div>
+          )}
+          <div className="flex flex-col gap-2">
+            <label htmlFor="code" className={labelClass}>
+              Six-digit code
+            </label>
+            <input
+              ref={codeRef}
+              id="code"
+              name="code"
+              type="text"
+              required
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              placeholder="000000"
+              className={`${fieldClass} tracking-[0.3em]`}
+              autoFocus={Boolean(email)}
+            />
+          </div>
+        </div>
+        <div className="mt-6 flex w-full flex-col items-center gap-4 md:mt-10">
+          <JoinButton
+            type="submit"
+            label="Confirm"
+            className="w-full md:w-[588px]"
+            disabled={status === "sending"}
+          />
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            <button
+              type="button"
+              onClick={onResend}
+              disabled={status === "sending"}
+              className={linkClass}
+            >
+              Send a new code
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("");
+                setMessage("");
+                setStatus("idle");
+                setStep("form");
+              }}
+              className={linkClass}
+            >
+              Use a different email
+            </button>
+          </div>
+        </div>
+        {statusEl}
+      </form>
+    );
+  }
+
+  if (step === "done" && place) {
+    return (
+      <section id="waitlist" aria-labelledby={titleId} className={cardClass}>
+        <div className="flex w-full max-w-[564px] flex-col gap-1 md:gap-2">
+          <h2
+            id={titleId}
+            className="text-[20px] font-semibold leading-8 tracking-[-1px] text-white md:text-[24px]"
+          >
+            You’re #{place.position.toLocaleString()} on the list
+          </h2>
+          <p className="text-[14px] font-normal leading-[18px] text-[#E4DEDE] md:text-[15px] md:leading-6">
+            Your place is confirmed for {place.city}. Every friend who joins with your link moves
+            you up the list, and we’ll email you the moment Earth opens.
+          </p>
+        </div>
+        <div className="mt-6 flex w-full flex-col gap-2 md:mt-10">
+          <label htmlFor="share-link" className={labelClass}>
+            Your link
+          </label>
+          <div className="flex flex-col gap-3 md:flex-row">
+            <input
+              id="share-link"
+              readOnly
+              value={shareUrl}
+              onFocus={(e) => e.currentTarget.select()}
+              className={`${fieldClass} md:flex-1`}
+            />
+            <button
+              type="button"
+              onClick={onCopy}
+              className="inline-flex h-12 items-center justify-center rounded-[30px] border border-[#E4DEDE]/60 px-6 text-[14px] font-medium leading-5 text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:w-[140px]"
+            >
+              {copied ? "Copied" : "Copy link"}
+            </button>
+          </div>
+        </div>
+        <div className="mt-6 flex w-full justify-center md:mt-10">
+          <JoinButton
+            href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+            label="Share on WhatsApp"
+            className="w-full md:w-[588px]"
+          />
+        </div>
+        {statusEl}
+      </section>
+    );
+  }
 
   return (
     <form
@@ -185,16 +460,22 @@ export function WaitlistCard() {
       onSubmit={onSubmit}
       aria-labelledby={titleId}
       aria-describedby={statusId}
-      className="flex w-full max-w-[1200px] scroll-mt-[88px] flex-col rounded-[30px] md:scroll-mt-28 bg-white/10 px-4 py-6 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] backdrop-blur-[12px] md:px-6 md:py-10 md:backdrop-blur-[20px] [@media(prefers-reduced-transparency:reduce)]:bg-[#13221A]/90 [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none"
+      className={cardClass}
     >
       <div className="flex w-full max-w-[564px] flex-col gap-1 md:gap-2">
-        <h2 className="text-[20px] font-semibold leading-8 tracking-[-1px] text-white md:text-[24px]">
+        <h2
+          id={titleId}
+          className="text-[20px] font-semibold leading-8 tracking-[-1px] text-white md:text-[24px]"
+        >
           Join The Waitlist
         </h2>
         <p className="text-[14px] font-normal leading-[18px] text-[#E4DEDE] md:text-[15px] md:leading-6">
           Submit your details below to get notified when we launch.
         </p>
       </div>
+
+      {/* A share link (?ref=CODE) credits the friend who sent it; nobody types this. */}
+      {referralCode && <input type="hidden" name="referralCode" value={referralCode} />}
 
       {/* Honeypot: hidden from people and assistive tech; bots that fill it are dropped server-side. */}
       <div className="sr-only" aria-hidden="true">
@@ -326,17 +607,7 @@ export function WaitlistCard() {
         <JoinButton type="submit" className="w-full md:w-[588px]" disabled={status === "sending"} />
       </div>
 
-      {/* Always mounted so screen readers announce changes. */}
-      <p
-        id={statusId}
-        role="status"
-        aria-live="polite"
-        className={`text-center text-[14px] leading-5 ${statusText ? "mt-4" : "sr-only"} ${
-          status === "error" ? "text-[#FFB4A8]" : "text-white"
-        }`}
-      >
-        {statusText}
-      </p>
+      {statusEl}
     </form>
   );
 }

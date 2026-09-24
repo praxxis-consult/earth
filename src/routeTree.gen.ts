@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
+import { Route as ApiWaitlistClaimRouteImport } from './routes/api/waitlist/claim'
+import { Route as ApiWaitlistResendRouteImport } from './routes/api/waitlist/resend'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +24,53 @@ const ApiWaitlistRoute = ApiWaitlistRouteImport.update({
   path: '/api/waitlist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWaitlistClaimRoute = ApiWaitlistClaimRouteImport.update({
+  id: '/claim',
+  path: '/claim',
+  getParentRoute: () => ApiWaitlistRoute,
+} as any)
+const ApiWaitlistResendRoute = ApiWaitlistResendRouteImport.update({
+  id: '/resend',
+  path: '/resend',
+  getParentRoute: () => ApiWaitlistRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/waitlist': typeof ApiWaitlistRouteWithChildren
+  '/api/waitlist/claim': typeof ApiWaitlistClaimRoute
+  '/api/waitlist/resend': typeof ApiWaitlistResendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/waitlist': typeof ApiWaitlistRouteWithChildren
+  '/api/waitlist/claim': typeof ApiWaitlistClaimRoute
+  '/api/waitlist/resend': typeof ApiWaitlistResendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/waitlist': typeof ApiWaitlistRouteWithChildren
+  '/api/waitlist/claim': typeof ApiWaitlistClaimRoute
+  '/api/waitlist/resend': typeof ApiWaitlistResendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/waitlist'
+  fullPaths:
+    '/' | '/api/waitlist' | '/api/waitlist/claim' | '/api/waitlist/resend'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/waitlist'
-  id: '__root__' | '/' | '/api/waitlist'
+  to: '/' | '/api/waitlist' | '/api/waitlist/claim' | '/api/waitlist/resend'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/waitlist'
+    | '/api/waitlist/claim'
+    | '/api/waitlist/resend'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ApiWaitlistRoute: typeof ApiWaitlistRoute
+  ApiWaitlistRoute: typeof ApiWaitlistRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +89,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWaitlistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/waitlist/claim': {
+      id: '/api/waitlist/claim'
+      path: '/claim'
+      fullPath: '/api/waitlist/claim'
+      preLoaderRoute: typeof ApiWaitlistClaimRouteImport
+      parentRoute: typeof ApiWaitlistRoute
+    }
+    '/api/waitlist/resend': {
+      id: '/api/waitlist/resend'
+      path: '/resend'
+      fullPath: '/api/waitlist/resend'
+      preLoaderRoute: typeof ApiWaitlistResendRouteImport
+      parentRoute: typeof ApiWaitlistRoute
+    }
   }
 }
 
+interface ApiWaitlistRouteChildren {
+  ApiWaitlistClaimRoute: typeof ApiWaitlistClaimRoute
+  ApiWaitlistResendRoute: typeof ApiWaitlistResendRoute
+}
+
+const ApiWaitlistRouteChildren: ApiWaitlistRouteChildren = {
+  ApiWaitlistClaimRoute: ApiWaitlistClaimRoute,
+  ApiWaitlistResendRoute: ApiWaitlistResendRoute,
+}
+
+const ApiWaitlistRouteWithChildren = ApiWaitlistRoute._addFileChildren(
+  ApiWaitlistRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ApiWaitlistRoute: ApiWaitlistRoute,
+  ApiWaitlistRoute: ApiWaitlistRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

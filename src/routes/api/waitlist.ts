@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { looksAutomated, rateLimited, save, validate } from "@/lib/waitlist";
+import { join, looksAutomated, rateLimited, validate } from "@/lib/waitlist";
 
 const notAllowed = () =>
   new Response("Method not allowed", { status: 405, headers: { allow: "POST" } });
 
 /**
- * POST /api/waitlist. Accepts JSON (from the hydrated form) or a urlencoded body (from a plain
- * HTML submit before hydration), so a sign-up is never lost or turned into a GET with the
- * person's details in the URL. Every other method is refused.
+ * POST /api/waitlist: validates and forwards a sign-up to the Earth API, which emails a six-digit
+ * code. Accepts JSON (from the hydrated form) or a urlencoded body (a plain HTML submit before
+ * hydration), so a sign-up is never lost or turned into a GET with the person's details in the URL.
  */
 export const Route = createFileRoute("/api/waitlist")({
   server: {
@@ -23,8 +23,6 @@ export const Route = createFileRoute("/api/waitlist")({
         const isJson = type.includes("application/json");
         const back = (flag: string) =>
           Response.redirect(new URL(`/?waitlist=${flag}#waitlist`, request.url), 303);
-        const fail = (status: number, message: string, flag: string) =>
-          isJson ? Response.json({ ok: false, message }, { status }) : back(flag);
 
         let raw: Record<string, unknown> = {};
         if (isJson) {
@@ -34,9 +32,12 @@ export const Route = createFileRoute("/api/waitlist")({
           if (form) raw = Object.fromEntries(form.entries());
         }
 
-        // A bot gets the same happy response as a person, and nothing is stored.
+        // A bot gets the same happy response as a person, and nothing is sent on.
         if (looksAutomated(raw, request))
-          return isJson ? Response.json({ ok: true }) : back("joined");
+          return isJson
+            ? Response.json({ ok: true, status: "pending_verification" })
+            : back("check");
+
         const result = validate(raw);
         if ("errors" in result) {
           return isJson
@@ -45,18 +46,27 @@ export const Route = createFileRoute("/api/waitlist")({
         }
         // Counted after validation, so typos never eat into a shared address's allowance.
         if (rateLimited(request))
-          return fail(
-            429,
-            "A lot of people on your connection just signed up. Please try again in a few minutes.",
-            "busy",
-          );
-        try {
-          await save(result.entry, { userAgent: request.headers.get("user-agent") });
-        } catch (err) {
-          console.error("waitlist save failed", err);
-          return fail(503, "We couldn't save your details. Please try again.", "error");
+          return isJson
+            ? Response.json(
+                {
+                  ok: false,
+                  message:
+                    "A lot of people on your connection just signed up. Please try again in a few minutes.",
+                },
+                { status: 429 },
+              )
+            : back("busy");
+
+        const out = await join(result.entry);
+        if (!out.ok) {
+          return isJson
+            ? Response.json(
+                { ok: false, message: out.message, errors: out.errors },
+                { status: out.status },
+              )
+            : back(out.status === 400 ? "invalid" : "error");
         }
-        return isJson ? Response.json({ ok: true }) : back("joined");
+        return isJson ? Response.json({ ok: true, status: out.data.status }) : back("check");
       },
     },
   },
